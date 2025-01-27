@@ -10,94 +10,243 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function wp_target_crop_generate_image($url)
+function wp_target_crop_generate_image($args, $output = true)
 {
-    try {
 
+    $defaults = array(
+        'crop' => 'contain',
+        'shouldCrop' => true,
+        'isDefaultSize' => false,
+        'q' => 80,
+    );
 
-        $query_args = array();
-        $wp_upload_dir = wp_upload_dir();
+    // Merge the defaults with the args
+    $args = wp_parse_args($args, $defaults);
 
-        $file_path = str_replace('/wp-content/uploads/', '', $url);
+    // If no width or height is set then return false
+    if (!isset($args['w']) && !isset($args['h'])) {
 
-
-        // Get the query args
-        $parse_url = parse_url($_SERVER['REQUEST_URI']);
-
-        // Parse the String
-        parse_str($parse_url['query'], $query_args);
-
-        // Get the image_id from the URL
-        $full_url = get_site_url() . $url;
-        $image_id = attachment_url_to_postid(esc_url($full_url));
-
-        // Get the focal point
-        $focal_point = false;
-        $fit = 'crop';
-        if ($image_id) {
-
-            // Get the focal point
-            $focal_point = get_post_meta($image_id, 'focal_point', true);
-
-            if ($focal_point) {
-
-                // Get the x and y
-                $focus_x = $focal_point['x'];
-                $focus_y = $focal_point['y'];
-
-
-                $x = round($focus_x * 100);
-                $y = round($focus_y * 100);
-
-
-                // Define the desired dimensions for the image size this needs to be the offset percentage
-                $fit = 'crop-' . $x . '-' . $y;
-
-            }
-
-
-        }
-
-
-        // cache to be on the wordpress server – to be moved
-        $server = League\Glide\ServerFactory::create([
-            'source' => 'wp-content/uploads',
-            'cache' => 'wp-content/cache/wp-target-crop',
-        ]);
-
-
-        // Set the defaukts
-        $defaults = array(
-            'q' => 80,
-            'fm' => 'png',
-            'fit' => $fit,
-
-        );
-
-        if (version_compare(PHP_VERSION, '8.0.0', '>=')) {
-            if (strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false) {
-                $defaults['fm'] = 'webp';
-            }
-        }
-
-        $query_args = array_merge($defaults, $query_args);
-
-        $server->outputImage($file_path, $query_args);
-
-        exit();
-
-    } catch (SignatureException $e) {
-
-
-        print_r($e->getMessage());
+        $args['w'] = 1920;
+        $args['h'] = 1080;
+        $args['isDefaultSize'] = true;
 
     }
 
 
+    // Check if the browser supports webp
+    if (version_compare(PHP_VERSION, '8.0.0', '>=')) {
+        if (strpos($_SERVER['HTTP_ACCEPT'], 'image/webp') !== false) {
+            $args['fm'] = 'webp';
+        }
+    }
 
+
+    // If there is no path then return false
+    if (!isset($args['path'])) {
+        return false;
+    }
+
+    // Get the path and unset it from the args
+    $path = $args['path'];
+    unset($args['path']);
+
+    $uploads_url = wp_get_upload_dir();
+
+    // Get the image_id from the URL
+    $full_url = $uploads_url['baseurl'] . '/' . $path;
+    $image_id = attachment_url_to_postid(esc_url($full_url));
+
+
+
+    if (!$image_id) {
+
+        if ($output) {
+
+            header("HTTP/1.0 404 Not Found");
+            exit();
+        }
+
+
+        return false;
+    }
+
+
+    $focal_point = false;
+    if ($image_id) {
+
+        // Get the focal point
+        $focal_point = get_post_meta($image_id, 'focal_point', true);
+
+        if ($focal_point) {
+
+            // Get the x and y
+            $focus_x = $focal_point->x;
+            $focus_y = $focal_point->y;
+
+
+            $x = round($focus_x * 100);
+            $y = round($focus_y * 100);
+
+
+            if ($args['shouldCrop']) {
+
+                // Define the desired dimensions for the image size this needs to be the offset percentage
+                $args['fit'] = 'crop-' . $x . '-' . $y;
+
+            }
+
+        }
+
+
+    }
+
+    try {
+
+
+        // cache to be on the wordpress server – to be moved
+        $server = League\Glide\ServerFactory::create([
+            'source' => WP_TARGET_CROP_UPLOADS_DIR,
+            'cache' => WP_TARGET_CROP_CACHE_DIR,
+        ]);
+
+
+        // If we are outputting then go for it
+        if ($output) {
+
+
+            try {
+
+                $server->outputImage($path, $args);
+
+
+            } catch (Exception $e) {
+
+
+                // If we have an error then output the error
+                $size = 'full';
+                if (!($args['isDefaultSize'])) {
+
+                    $size = array($args['w'], $args['h']);
+
+                }
+
+                $imageUrl = wp_get_attachment_image_url($image_id, $size, false);
+
+
+                if ($imageUrl) {
+
+                    // Set the correct headers for an image response
+                    $image_info = getimagesize($imageUrl);
+                    header('Content-Type: ' . $image_info['mime']);
+                    header('Content-Length: ' . filesize($imageUrl));
+
+                    // Output the image
+                    echo file_get_contents($imageUrl);
+                    exit();
+
+
+                } else {
+
+                    // If the image doesn't exist, load WordPress 404 page
+                    status_header(404); // Set the 404 status
+                    get_template_part('404'); // This will load your theme's 404.php template
+
+                    exit(); // Stop the script after 404 is triggered
+
+                }
+
+
+            }
+
+
+        } else {
+
+
+            try {
+
+                $server->makeImage($path, $args);
+
+
+            } catch (Exception $e) {
+
+                error_log('Error: ' . $e->getMessage());
+
+                return false;
+
+            }
+
+        }
+
+
+    } catch (SignatureException $e) {
+
+
+        error_log('Error: ' . $e->getMessage());
+
+        echo $e->getMessage();
+
+
+    }
 
 
 }
+
+if (!function_exists('wp_target_crop_delete_cache')):
+
+    function wp_target_crop_delete_cache($attachment_id)
+    {
+
+        // cache to be on the wordpress server – to be moved
+        $server = League\Glide\ServerFactory::create([
+            'source' => WP_TARGET_CROP_UPLOADS_DIR,
+            'cache' => WP_TARGET_CROP_CACHE_DIR,
+        ]);
+
+        $file_path = get_post_meta($attachment_id, '_wp_attached_file', true);
+
+        if ($file_path) {
+
+            $server->deleteCache($file_path);
+
+        }
+
+    }
+
+endif;
+
+if (!function_exists('wp_target_crop_build_cache')):
+
+    function wp_target_crop_build_cache($attachment_id, $focal_point)
+    {
+
+        $file_path = get_post_meta($attachment_id, '_wp_attached_file', true);
+        $sizes = wp_get_additional_image_sizes();
+
+
+        foreach ($sizes as $size) {
+
+            // Get the width and height
+            $width = $size['width'];
+            $height = $size['height'];
+            $crop = $size['crop'];
+
+            wp_target_crop_generate_image(
+                array(
+                    'w' => $width,
+                    'h' => $height,
+                    'path' => $file_path,
+                    'shouldCrop' => $crop,
+                ),
+                $output = false
+            );
+
+
+        }
+
+
+    }
+
+endif;
 
 
 /**

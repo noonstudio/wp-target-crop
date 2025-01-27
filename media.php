@@ -8,13 +8,24 @@
  * 
  */
 
-if (!defined('WPINC')) {
-  define('WPINC', 'wp-includes');
-}
-
-require 'vendor/autoload.php';
+// Get wp-load.php
+require './config.php';
 
 use League\Glide\Signatures\SignatureException;
+
+
+$query_args = array();
+$parse_url = parse_url($_SERVER['REQUEST_URI']);
+
+// Parse the String
+parse_str($parse_url['query'], $query_args);
+
+// File path
+$query_args['path'] = str_replace('/images/', '', $parse_url['path']);
+
+// Get the image 
+$image = wp_target_crop_generate_image($query_args);
+exit();
 
 try {
 
@@ -23,8 +34,10 @@ try {
   $file_path = str_replace('/images/', '', $parse_url['path']);
 
   // Parse the String
-  parse_str($parse_url['query'], $query_args);
-
+  parse_str(
+    $parse_url['query'],
+    $query_args
+  );
   // cache to be on the wordpress server – to be moved
   $server = League\Glide\ServerFactory::create([
     'source' => '../../../wp-content/uploads',
