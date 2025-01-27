@@ -1,0 +1,41 @@
+{
+  "name": "wp-target-crop",
+  "version": "1.0.0",
+  "description": "This plugin will allow front end users set focal points that actually work hooking into wordpress image functions.",
+  "main": "index.js",
+  "repository": "https://github.com/noonstudio/wp-target-crop.git",
+  "author": "Alex Tierney <alex@noon.studio>",
+  "scripts": {
+    "development:tailwind": "npx @tailwindcss/cli -i src/css/media.css -c tailwind.config.js -o dist/css/media.css",
+    "development:scripts": "wp-scripts start src/js/media.js --output-path=dist/js",
+    "development:composer": "php composer install",
+    "development": "run-p development:**",
+    "dev": "yarn run development",
+    "watch:composer": "npm run development:composer",
+    "watch:tailwind": "npm run development:tailwind -- --watch",
+    "watch:scripts": "npm run development:scripts",
+    "watch": "run-p watch:**",
+    "lint:eslint": "npx eslint",
+    "lint:prettier": "npx prettier --check .",
+    "lint": "run-p lint:*",
+    "lint-fix:eslint": "npx eslint --fix",
+    "lint-fix:prettier": "npx prettier --write .",
+    "lint-fix": "run-p lint-fix:*",
+    "production:tailwind": "cross-env NODE_ENV=production npm run development:tailwind -- --minify",
+    "production:scripts": "wp-scripts build src/js/media.js --output-path=dist/js",
+    "production:composer": "npm run development:composer",
+    "production": "run-p production:**",
+    "prod": "npm run production"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "@wordpress/api-fetch": "^7.16.0",
+    "@wordpress/components": "^29.2.0",
+    "@wordpress/data": "^10.16.0",
+    "@wordpress/element": "^6.16.0",
+    "@wordpress/scripts": "^30.9.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
