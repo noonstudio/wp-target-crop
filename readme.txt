@@ -1,7 +1,6 @@
 === WP Target Crop ===
 Tags: image, crop, cropping, resize, aspect ratio, fit, size, advanced, simple, media, library, photography, featured image, content, responsive, design, focal, poimnt
-Tested up to: 6.4.3
-Stable tag: trunk
+Tested up to: 6.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

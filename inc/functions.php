@@ -113,7 +113,6 @@ function wp_target_crop_generate_image($args, $output = true)
         // If we are outputting then go for it
         if ($output) {
 
-
             try {
 
                 $server->outputImage($path, $args);
@@ -140,8 +139,11 @@ function wp_target_crop_generate_image($args, $output = true)
                     header('Content-Type: ' . $image_info['mime']);
                     header('Content-Length: ' . filesize($imageUrl));
 
+
                     // Output the image
-                    echo file_get_contents($imageUrl);
+                    $response = wp_remote_get($imageUrl);
+                    echo wp_remote_retrieve_body($response);
+
                     exit();
 
 
@@ -169,8 +171,6 @@ function wp_target_crop_generate_image($args, $output = true)
 
             } catch (Exception $e) {
 
-                error_log('Error: ' . $e->getMessage());
-
                 return false;
 
             }
@@ -181,9 +181,10 @@ function wp_target_crop_generate_image($args, $output = true)
     } catch (SignatureException $e) {
 
 
-        error_log('Error: ' . $e->getMessage());
+        $message = $e->getMessage();
+        echo esc_html($message);
 
-        echo $e->getMessage();
+        exit();
 
 
     }

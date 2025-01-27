@@ -23,7 +23,7 @@ if (!function_exists('wp_target_crop_attachment_fields_to_edit')):
         $fields = array(
             'wp_target_crop' => array(
                 'input' => 'html',
-                'label' => __('Focal Point Picker'),
+                'label' => 'Focal Point Picker',
                 'html' => $html
             )
         ) + $fields;
@@ -54,7 +54,8 @@ if (!function_exists('wp_target_crop_enqueue_scripts')):
             'wp_target_crop_media', // Handle.
             plugins_url('/dist/js/media.js', dirname(__FILE__)), // Block.build.js: We register the block here. Built with Webpack.
             $dependencies, // Dependencies, defined above.
-            $version // Version: File modification time.
+            $version, // Version: File modification time.,
+            true // Enqueue the script in the footer.
         );
 
         // Styles.

@@ -12,7 +12,7 @@
 require './config.php';
 
 $query_args = array();
-$parse_url = parse_url($_SERVER['REQUEST_URI']);
+$parse_url = wp_parse_url($_SERVER['REQUEST_URI']);
 
 // Parse the String
 parse_str($parse_url['query'], $query_args);

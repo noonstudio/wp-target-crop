@@ -95,7 +95,7 @@ if (!function_exists('wp_target_crop_get_focal_point')) {
         if (empty($url)) {
             return new WP_Error(
                 'missing_url',
-                __('Missing URL parameter. Please provide a valid URL.', 'text-domain'),
+                'Missing URL parameter. Please provide a valid URL.',
                 array('status' => 400)
             );
         }
@@ -106,7 +106,7 @@ if (!function_exists('wp_target_crop_get_focal_point')) {
         if (!filter_var($full_url, FILTER_VALIDATE_URL)) {
             return new WP_Error(
                 'invalid_url',
-                __('The provided URL is invalid.', 'text-domain'),
+                'The provided URL is invalid.',
                 array('status' => 400)
             );
         }
@@ -118,7 +118,7 @@ if (!function_exists('wp_target_crop_get_focal_point')) {
             return new WP_Error(
                 'invalid_image_id',
                 sprintf(
-                    __('No attachment found for the provided URL: %s', 'text-domain'),
+                    'No attachment found for the provided URL: %s',
                     esc_url($full_url)
                 ),
                 array('status' => 400)
@@ -130,7 +130,7 @@ if (!function_exists('wp_target_crop_get_focal_point')) {
         if ($post_type !== 'attachment') {
             return new WP_Error(
                 'invalid_attachment',
-                __('The provided URL does not correspond to a valid attachment.', 'text-domain'),
+                'The provided URL does not correspond to a valid attachment.',
                 array('status' => 400)
             );
         }
