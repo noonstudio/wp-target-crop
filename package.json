@@ -21,11 +21,13 @@
     "lint-fix:eslint": "npx eslint --fix",
     "lint-fix:prettier": "npx prettier --write .",
     "lint-fix": "run-p lint-fix:*",
-    "production:tailwind": "cross-env NODE_ENV=production npm run development:tailwind -- --minify",
+    "production:tailwind": "npm run development:tailwind -- --minify",
     "production:scripts": "wp-scripts build src/js/media.js --output-path=dist/js",
     "production:composer": "npm run development:composer",
     "production": "run-p production:**",
-    "prod": "npm run production"
+    "prod": "npm run production",
+    "zip": "node src/node_functions/plugin-zip.js wp-target-crop",
+    "bundle": "npm run-s production zip"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.0",
@@ -34,6 +36,7 @@
     "@wordpress/data": "^10.16.0",
     "@wordpress/element": "^6.16.0",
     "@wordpress/scripts": "^30.9.0",
+    "archiver": "^7.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0"
