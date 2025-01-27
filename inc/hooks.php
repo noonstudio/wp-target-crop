@@ -129,7 +129,8 @@ if (!function_exists('wp_target_crop_image_htaccess_contents')):
     function wp_target_crop_image_htaccess_contents($rules)
     {
 
-        $newRule = "<IfModule mod_rewrite.c>" . PHP_EOL;
+        $newRule = PHP_EOL;
+        $newRule .= "<IfModule mod_rewrite.c>" . PHP_EOL;
         $newRule .= "RewriteEngine On" . PHP_EOL;
         $newRule .= "RewriteCond %{QUERY_STRING} (^|&)w=[0-9]+(&|$)" . PHP_EOL;
         $newRule .= "RewriteCond %{QUERY_STRING} (^|&)h=[0-9]+(&|$)" . PHP_EOL;
