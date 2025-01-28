@@ -260,7 +260,7 @@ endif;
  * @param int $focus_y Focal point Y (0-100).
  * @return string image URL.
  */
-if (!function_exists(function: 'wp_target_crop_image_url')):
+if (!function_exists( 'wp_target_crop_image_url')):
     function wp_target_crop_image_url($src, $width, $height)
     {
 

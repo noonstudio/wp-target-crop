@@ -104,8 +104,34 @@ if (!function_exists('wp_target_crop_image_attributes')):
                     $srcset = explode(', ', $attributes['srcset']);
                     $new_srcset = array_map(function ($srcset_item) use ($width, $height, $standard_url) {
                         $srcset_parts = explode(' ', $srcset_item);
+           
+                        // Get the width and height by getting the wwwxhhh part
+                        $srcset_url = $srcset_parts[0];
+
                         $size = $srcset_parts[1];
-                        $crop_url = wp_target_crop_image_url($standard_url, $size, $height);
+
+                        // Standard Url without the  filetype
+                        $filePath = substr($standard_url, 0, strrpos($standard_url, '.'));
+
+                        // Get the difference of the file path and the standard url
+                        $srcsetPath = substr($srcset_url, 0, strrpos($srcset_url, '.'));
+
+                        // Get the difference of the file path and the standard url
+                        $dimensions = str_replace($filePath . '-', '', $srcsetPath);
+
+                        // Get the width and height (explode by x)
+                        $dimensions = explode('x', $dimensions);
+
+                        // If the dimensions are not 2 then we are dealiting with a full size image
+                        if (count($dimensions) !== 2) {
+                            return $srcset_item;
+                        }
+
+                        // Get the width
+                        $width = $dimensions[0];
+                        $height = $dimensions[1];
+
+                        $crop_url = wp_target_crop_image_url($standard_url, $width, $height);
 
                         return $crop_url . ' ' . $size;
                     }, $srcset);
