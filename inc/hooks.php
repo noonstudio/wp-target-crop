@@ -143,3 +143,27 @@ if (!function_exists('wp_target_crop_image_htaccess_contents')):
     }
 
 endif;
+
+
+add_action('admin_init', 'wp_target_crop_check_server');
+
+if( ! function_exists('wp_target_crop_check_server') ) : 
+
+
+    function wp_target_crop_check_server(){
+
+        // Check if SERVER_SOFTWARE doesn't exist or doesn't contain "Apache".
+        if ( ! isset( $_SERVER['SERVER_SOFTWARE'] ) || stripos( $_SERVER['SERVER_SOFTWARE'], 'Apache' ) === false ) {
+
+            // Deactivate the plugin immediately
+            deactivate_plugins( "wp-target-crop/wp-target-crop.php" );
+        
+            // Flush the rewrite rules to refresh permalinks
+            flush_rewrite_rules();
+
+        }
+
+    }
+
+
+endif;
