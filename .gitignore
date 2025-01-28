@@ -16,6 +16,8 @@
 /readme.html
 /wp-*.php
 /xmlrpc.php
+/composer.lock
+/dist/
 
 # Configuration
 wp-config.php
@@ -46,3 +48,6 @@ wp-config.php
 # Note: If you wish to whitelist themes,
 # uncomment the next line
 #/wp-content/themes
+/node_modules
+*.lock
+yarn.lock
