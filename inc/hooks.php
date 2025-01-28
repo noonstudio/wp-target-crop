@@ -78,8 +78,11 @@ if (!function_exists('wp_target_crop_image_attributes')):
     {
 
 
+
+
         // Check if the image has a focal point stored in metadata
         $focal_point = get_post_meta($attachment->ID, 'focal_point', true);
+
 
         if ($focal_point) {
 
@@ -87,6 +90,15 @@ if (!function_exists('wp_target_crop_image_attributes')):
             // Define the desired dimensions for the image size
             $dimensions = get_image_size_dimensions($size); // Replace this with your size mapping
 
+            // Get attachment meta
+            $attachment_meta = wp_get_attachment_metadata($attachment->ID);
+
+            // If the size is full then we are dealing with a full size image
+            if( $size === 'full') {
+                $dimensions = [$attachment_meta['width'], $attachment_meta['height']];
+            }
+
+            // Only proceed if we have dimensions
             if ($dimensions) {
                 [$width, $height] = $dimensions;
                 $standard_url = $attachment->guid;
@@ -102,7 +114,7 @@ if (!function_exists('wp_target_crop_image_attributes')):
                 // Also sort the srcset attributes
                 if (isset($attributes['srcset'])) {
                     $srcset = explode(', ', $attributes['srcset']);
-                    $new_srcset = array_map(function ($srcset_item) use ($width, $height, $standard_url) {
+                    $new_srcset = array_map(function ($srcset_item) use ($width, $height, $standard_url, $attachment_meta) {
                         $srcset_parts = explode(' ', $srcset_item);
            
                         // Get the width and height by getting the wwwxhhh part
@@ -122,9 +134,9 @@ if (!function_exists('wp_target_crop_image_attributes')):
                         // Get the width and height (explode by x)
                         $dimensions = explode('x', $dimensions);
 
-                        // If the dimensions are not 2 then we are dealiting with a full size image
+                        // If the dimensions are not 2 then we are dealing with the full size image
                         if (count($dimensions) !== 2) {
-                            return $srcset_item;
+                            $dimensions = [$attachment_meta['width'], $attachment_meta['height']];
                         }
 
                         // Get the width

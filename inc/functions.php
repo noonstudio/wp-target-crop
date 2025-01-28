@@ -18,6 +18,7 @@ function wp_target_crop_generate_image($args, $output = true)
         'shouldCrop' => true,
         'isDefaultSize' => false,
         'q' => 80,
+        's' => null
     );
 
     // Merge the defaults with the args
@@ -40,9 +41,43 @@ function wp_target_crop_generate_image($args, $output = true)
         }
     }
 
+    // Lets check the hash of the secret
+    if (isset($args['s'])) {
+
+        $secret = $args['s'];
+        $hash = hash('sha256', $args['w'] . $args['h']);
+
+        // If the hash is not the same then return false
+        if ($hash !== $secret) {
+
+
+            if ($output) {
+
+                // If the image doesn't exist, load WordPress 404 page
+                status_header(404); // Set the 404 status
+                get_template_part('404'); // This will load your theme's 404.php template
+                exit();
+            }
+
+            return false;
+        }
+
+    }
+
 
     // If there is no path then return false
     if (!isset($args['path'])) {
+
+
+
+        if ($output) {
+
+            // If the image doesn't exist, load WordPress 404 page
+            status_header(404); // Set the 404 status
+            get_template_part('404'); // This will load your theme's 404.php template
+            exit();
+        }
+
         return false;
     }
 
@@ -62,7 +97,9 @@ function wp_target_crop_generate_image($args, $output = true)
 
         if ($output) {
 
-            header("HTTP/1.0 404 Not Found");
+            // If the image doesn't exist, load WordPress 404 page
+            status_header(404); // Set the 404 status
+            get_template_part('404'); // This will load your theme's 404.php template
             exit();
         }
 
@@ -231,10 +268,17 @@ if (!function_exists('wp_target_crop_build_cache')):
             $height = $size['height'];
             $crop = $size['crop'];
 
+
+            // Secret is a hash of the width and height
+            $secret = hash('sha256', $width . $height);
+
+
+
             wp_target_crop_generate_image(
                 array(
                     'w' => $width,
                     'h' => $height,
+                    's' => $secret,
                     'path' => $file_path,
                     'shouldCrop' => $crop,
                 ),
@@ -266,9 +310,13 @@ if (!function_exists( 'wp_target_crop_image_url')):
 
         $width = str_replace('w', '', $width);
 
+        // Secret is a hash of the width and height
+        $secret = hash('sha256', $width . $height);
+
         $params = [
             'w' => $width,
             'h' => $height,
+            's' => $secret,
         ];
 
         $url = $src . '?' . http_build_query($params);
