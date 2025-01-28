@@ -53,7 +53,6 @@ if (slug) {
     "package.json",
     "postcss.config.js",
     "tailwind.config.js",
-    "composer.json",
     "composer.lock",
     "composer.phar",
     "composer-setup.php",
