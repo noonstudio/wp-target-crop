@@ -60,7 +60,7 @@ function wp_target_crop_generate_image($args, $output = true)
 
     }
 
-
+    
     // If there is no path then return false
     if (!isset($args['path'])) {
 
