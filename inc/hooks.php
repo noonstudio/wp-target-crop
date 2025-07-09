@@ -44,28 +44,35 @@ if (!function_exists('wp_target_crop_enqueue_scripts')):
     function wp_target_crop_enqueue_scripts()
     {
 
-        // Get the dependencies
-        $asset_file = include(plugin_dir_path(__DIR__) . 'dist/js/media.asset.php');
-        $dependencies = $asset_file['dependencies'];
-        $version = $asset_file['version'];
+        global $pagenow;
 
-        // Media
-        wp_enqueue_script(
-            'wp_target_crop_media', // Handle.
-            plugins_url('/dist/js/media.js', dirname(__FILE__)), // Block.build.js: We register the block here. Built with Webpack.
-            $dependencies, // Dependencies, defined above.
-            $version, // Version: File modification time.,
-            true // Enqueue the script in the footer.
-        );
+        if (isset($pagenow) && $pagenow === 'upload.php' || $pagenow === "post.php") {
 
-        // Styles.
-        wp_enqueue_style(
-            'wp_target_crop_media', // Handle.
-            plugins_url('/dist/css/media.css', dirname(__FILE__)), // Block editor CSS.
-            array('wp-jquery-ui-dialog'), // Dependency to include the CSS after it.
-            $version // Version: File modification time.
-        );
 
+            // Get the dependencies
+            $asset_file = include(plugin_dir_path(__DIR__) . 'dist/js/media.asset.php');
+            $dependencies = $asset_file['dependencies'];
+            $version = $asset_file['version'];
+
+            // Media
+            wp_enqueue_script(
+                'wp_target_crop_media', // Handle.
+                plugins_url('/dist/js/media.js', dirname(__FILE__)), // Block.build.js: We register the block here. Built with Webpack.
+                $dependencies, // Dependencies, defined above.
+                $version, // Version: File modification time.,
+                true // Enqueue the script in the footer.
+            );
+
+            // Styles.
+            wp_enqueue_style(
+                'wp_target_crop_media', // Handle.
+                plugins_url('/dist/css/media.css', dirname(__FILE__)), // Block editor CSS.
+                array('wp-jquery-ui-dialog'), // Dependency to include the CSS after it.
+                $version // Version: File modification time.
+            );
+
+
+        }
 
     }
 
@@ -83,6 +90,12 @@ if (!function_exists('wp_target_crop_image_attributes')):
         // Check if the image has a focal point stored in metadata
         $focal_point = get_post_meta($attachment->ID, 'focal_point', true);
 
+        if (current_user_can('manage_options')) {
+
+            $focal_point = true;
+
+        }
+
 
         if ($focal_point) {
 
@@ -94,7 +107,7 @@ if (!function_exists('wp_target_crop_image_attributes')):
             $attachment_meta = wp_get_attachment_metadata($attachment->ID);
 
             // If the size is full then we are dealing with a full size image
-            if( $size === 'full') {
+            if ($size == 'full') {
                 $dimensions = [$attachment_meta['width'], $attachment_meta['height']];
             }
 
@@ -102,7 +115,6 @@ if (!function_exists('wp_target_crop_image_attributes')):
             if ($dimensions) {
                 [$width, $height] = $dimensions;
                 $standard_url = $attachment->guid;
-
 
                 // Generate a new image URL using Glide
                 $crop_url = wp_target_crop_image_url($standard_url, $width, $height);
@@ -116,7 +128,7 @@ if (!function_exists('wp_target_crop_image_attributes')):
                     $srcset = explode(', ', $attributes['srcset']);
                     $new_srcset = array_map(function ($srcset_item) use ($width, $height, $standard_url, $attachment_meta) {
                         $srcset_parts = explode(' ', $srcset_item);
-           
+
                         // Get the width and height by getting the wwwxhhh part
                         $srcset_url = $srcset_parts[0];
 
@@ -140,10 +152,12 @@ if (!function_exists('wp_target_crop_image_attributes')):
                         }
 
                         // Get the width
-                        $width = $dimensions[0];
+                        $width = $size;
                         $height = $dimensions[1];
 
+
                         $crop_url = wp_target_crop_image_url($standard_url, $width, $height);
+
 
                         return $crop_url . ' ' . $size;
                     }, $srcset);
@@ -185,17 +199,18 @@ endif;
 
 add_action('admin_init', 'wp_target_crop_check_server');
 
-if( ! function_exists('wp_target_crop_check_server') ) : 
+if (!function_exists('wp_target_crop_check_server')):
 
 
-    function wp_target_crop_check_server(){
+    function wp_target_crop_check_server()
+    {
 
         // Check if SERVER_SOFTWARE doesn't exist or doesn't contain "Apache".
-        if ( ! isset( $_SERVER['SERVER_SOFTWARE'] ) || stripos( $_SERVER['SERVER_SOFTWARE'], 'Apache' ) === false ) {
+        if (!isset($_SERVER['SERVER_SOFTWARE']) || stripos($_SERVER['SERVER_SOFTWARE'], 'Apache') === false) {
 
             // Deactivate the plugin immediately
-            deactivate_plugins( "wp-target-crop/wp-target-crop.php" );
-        
+            deactivate_plugins("wp-target-crop/wp-target-crop.php");
+
             // Flush the rewrite rules to refresh permalinks
             flush_rewrite_rules();
 

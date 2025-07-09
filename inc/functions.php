@@ -42,33 +42,27 @@ function wp_target_crop_generate_image($args, $output = true)
     }
 
     // Lets check the hash of the secret
-    if (isset($args['s'])) {
+    $secret = $args['s'];
+    $hash = hash('sha256', $args['w'] . $args['h']);
 
-        $secret = $args['s'];
-        $hash = hash('sha256', $args['w'] . $args['h']);
+    // If the hash is not the same then return false
+    if ($hash !== $secret) {
 
-        // If the hash is not the same then return false
-        if ($hash !== $secret) {
+        if ($output) {
 
-
-            if ($output) {
-
-                // If the image doesn't exist, load WordPress 404 page
-                status_header(404); // Set the 404 status
-                get_template_part('404'); // This will load your theme's 404.php template
-                exit();
-            }
-
-            return false;
+            // If the image doesn't exist, load WordPress 404 page
+            status_header(404); // Set the 404 status
+            get_template_part('404'); // This will load your theme's 404.php template
+            exit();
         }
+
+        return false;
 
     }
 
 
     // If there is no path then return false
     if (!isset($args['path'])) {
-
-
 
         if ($output) {
 
@@ -89,8 +83,23 @@ function wp_target_crop_generate_image($args, $output = true)
 
     // Get the image_id from the URL
     $full_url = $uploads_url['baseurl'] . '/' . $path;
-    $image_id = attachment_url_to_postid(esc_url($full_url));
+    $image_id = attachment_url_to_postid('/' . $path);
 
+
+    if (!$image_id) {
+
+
+        global $wpdb;
+
+        // 2a) Exact GUID match in posts.guid
+        $image_id = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT ID FROM {$wpdb->posts} WHERE guid = %s AND post_type = 'attachment'",
+                $full_url
+            )
+        );
+
+    }
 
 
     if (!$image_id) {
@@ -208,7 +217,7 @@ function wp_target_crop_generate_image($args, $output = true)
 
             } catch (Exception $e) {
 
-                return false;
+                return "Error";
 
             }
 
@@ -304,11 +313,14 @@ endif;
  * @param int $focus_y Focal point Y (0-100).
  * @return string image URL.
  */
-if (!function_exists( 'wp_target_crop_image_url')):
+if (!function_exists('wp_target_crop_image_url')):
     function wp_target_crop_image_url($src, $width, $height)
     {
 
         $width = str_replace('w', '', $width);
+
+        // Make sure this is numerical and ensure that there are no -
+        $height = explode('-', $height)[0];
 
         // Secret is a hash of the width and height
         $secret = hash('sha256', $width . $height);
